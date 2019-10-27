@@ -15,7 +15,9 @@
     * [fbTools.group.kick](#groupkick)
     * [fbTools.group.unban](#groupunban)
     * [fbTools.group.mute](#groupmute)
+    * [fbTools.group.notification](#groupnotification)
     * [fbTools.group.leave](#groupleave)
+    * [fbTools.group.unfollow](#groupunfollow)
     * Post
         * [fbTools.group.post.del](#grouppostdel)
         * [fbTools.group.post.disableCmt](#grouppostdisableCmt)
@@ -157,6 +159,20 @@ Parameter | Type | Description
 groupId | Integer | ID of group
 memberId | Integer | ID of member (User)
 
+### group.notification
+```fbTools.group.notification(groupId, level)```
+
+Parameter | Type | Description
+-|-|-
+groupId | Integer | ID of group
+level | Integer | Level Of Notification 
+
+Integer | Level
+-|-
+1 | Off
+2 | Friends
+3 | All
+6 | Highlight
 
 ### group.leave
 ```fbTools.group.leave(groupId, reAdd)```
@@ -165,6 +181,14 @@ Parameter | Type | Description
 -|-|-
 groupId | Integer | ID of group
 reAdd | Boolean | Do you want to let that group add you in again? Use boolean ;)
+
+### group.unfollow
+```fbTools.group.leave(groupId, follow)```
+
+Parameter | Type | Description
+-|-|-
+groupId | Integer | ID of group
+follow | Integer | 1 = Unfollow / 0 = Follow
 
 ### group.post.del
 ```fbTools.group.post.del(groupId, postId)```
@@ -330,7 +354,9 @@ group.create | - | ?
 group.kick | - | ?
 group.unban | - | ?
 group.mute | - | ?
-group.leave | - | ?
+group.leave | + | +
+group.notification | + | +
+group.unfollow | + | +
 group.post.del | - | ?
 group.post.disableCmt | + | +
 group.post.offNotification | + | +
@@ -343,6 +369,7 @@ me.unfriend | - | ?
 me.unfollow | - | ?
 me.poke | - | ?
 me.post.del | + | +
+me.post.offNotification | + | +
 page.inviteLike | - | ?
 page.like | - | ?
 page.unlike | - | ?

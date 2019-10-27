@@ -259,6 +259,17 @@ var fbTools = {
 				body: fbTools.conv.form(f)
 			}).then((res) => (String(res.status).match(/^2/g)) ? true : false);
 		},
+		notification: async function(groupId, level) {
+			// Supscription Level: 6 - Highlight | 3 - All | 2 - Friends | 1 - Off
+			let f = {
+				fb_dtsg: await fbTools.get.dtsg()
+			};
+			return fetch(`https://www.facebook.com/groups/notification/settings/edit/?group_id=${groupId}&subscription_level=${level}`, {
+				method: "POST",
+				credentials: "include",
+				body: fbTools.conv.form(f)
+			}).then((res) => (String(res.status).match(/^2/g)) ? true : false);
+		},
 		leave: async function(groupId, reAdd) {
 			// reAdd = Boolean, Which accept anyone invite you to join group again, default: false = they still can add you to group
 			let f = {
@@ -271,6 +282,19 @@ var fbTools = {
 				credentials: "include",
 				body: fbTools.conv.form(f)
 			}).then((res) => (String(res.status).match(/^2/g)) ? true : false);
+		},
+		unfollow: async function(groupId, follow) {
+			// follow = 1 -> Unfollow | 0 -> Follow
+			let f = {
+				group_id: groupId,
+				unfollow: follow,
+				fb_dtsg: await fbTools.get.dtsg()
+			};
+			return fetch("https://www.facebook.com/groups/membership/unfollow_group/", {
+					method: "POST",
+					credentials: "include",
+					body: fbTools.conv.form(f)
+				}).then((res) => (String(res.status).match(/^2/g)) ? true : false);
 		},
 		post: {
 			del: async function(groupId, postId) {
