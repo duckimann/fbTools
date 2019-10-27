@@ -434,6 +434,19 @@ var fbTools = {
 					credentials: "include",
 					body: fbTools.conv.form(f)
 				}).then((res) => (String(res.status).match(/^2/g)) ? true : false);
+			},
+			offNotification: async function(groupId, postId, follow) {
+				// follow = 0 -> Turn Off notification | 1 -> turn on notification
+				let f = {
+					fb_dtsg: await fbTools.get.dtsg(),
+					message_id: postId,
+					follow: follow
+				};
+				return fetch("https://www.facebook.com/ajax/litestand/follow_post", {
+					method: "POST",
+					credentials: "include",
+					body: fbTools.conv.form(f)
+				}).then((res) => (String(res.status).match(/^2/g)) ? true : false);
 			}
 		}
 	},

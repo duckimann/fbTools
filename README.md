@@ -33,6 +33,7 @@
     * [fbTools.me.poke](#mepoke)
     * Post
         * [fbTools.me.post.del](#mepostdel)
+        * [fbTools.me.post.offNotification](#mepostoffNotification)
 * Page
     * [fbTools.page.inviteLike](#pageinvitelike)
     * [fbTools.page.like](#pagelike)
@@ -256,6 +257,14 @@ userId | Integer | ID of User
 Parameter | Type | Description
 -|-|-
 postId | Integer | ID of Post
+
+### me.post.offNotification
+```fbTools.me.post.offNotification(postId, follow)```
+
+Parameter | Type | Description
+-|-|-
+postId | Integer | ID of post
+follow | Integer | 1 = Turn On Notification / 0 = Turn off
 
 <hr>
 
