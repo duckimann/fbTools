@@ -23,8 +23,7 @@
         * [fbTools.group.post.disableCmt](#grouppostdisableCmt)
         * [fbTools.group.post.offNotification](#grouppostoffNotification)
 * Friend Request
-    * [fbTools.friendRequest.accept](#friendrequestaccept)
-    * [fbTools.friendRequest.reject](#friendrequestreject)
+    * [fbTools.friendRequest](#friendrequest)
 * Me
     * Block
         * [fbTools.me.block.page](#meblockpage)
@@ -39,9 +38,7 @@
 * Page
     * [fbTools.page.inviteLike](#pageinvitelike)
     * [fbTools.page.like](#pagelike)
-    * [fbTools.page.unlike](#pageunlike)
 * [fbTools.reaction](#reaction)
-* [fbTools.upload](#upload)
 
 * Most function return a Promise with value true.
 
@@ -92,7 +89,7 @@ audio | Integer (Optional) | ID of audio
 emoji | String (Optional) | Emoji like this "😂" or Escaped Unicode String
 emoji_size | String (Optional) | Pick one: "small" "medium" "large"
 thread | Integer (Optional) | ID of chat thread
-image | Integer (Optional) | ID of Image
+img | Integer (Optional) | ID of Image
 message | String (Optional) | Your chat message
 sticker | Integer (Optional) | ID of sticker
 user | Integer | ID of user
@@ -127,12 +124,14 @@ groupId | Integer | ID of group
 userId | Integer | ID of member (User)
 
 ### group.create
-```fbTools.group.create(groupName, privacy)```
+```fbTools.group.create(groupName, privacy, discov, memIds)```
 
 Parameter | Type | Description
 -|-|-
 groupName | String | Name of new group
-privacy | string | Pick one: "close", "secret", "open"
+privacy | string | Pick one: "secret", "open"
+discov | string | Pick one: "members_only", "anyone"
+memIds | Array | Array of user you want them to be group member
 
 ### group.kick
 ```fbTools.group.kick(groupId, memberId, block)```
@@ -217,19 +216,13 @@ follow | Integer | 1 = Turn On Notification / 0 = Turn off
 
 <hr>
 
-### friendRequest.accept
-```fbTools.friendRequest.accept(userId)```
+### friendRequest
+```fbTools.friendRequest.accept(userId, act)```
 
 Parameter | Type | Description
 -|-|-
 userId | Integer | ID of User
-
-### friendRequest.reject
-```fbTools.friendRequest.reject(userId)```
-
-Parameter | Type | Description
--|-|-
-userId | Integer | ID of User
+act | Boolean | true = accept / false = reject
 
 <hr>
 
@@ -302,18 +295,12 @@ arrInvite | Array of Integer | IDs of people you want to invite to like your pag
 inviteMessage | String | Message they'll receive with the invite.
 
 ### page.like
-```fbTools.page.like(pageId)```
+```fbTools.page.like(pageId, act)```
 
 Parameter | Type | Description
 -|-|-
 pageId | Integer | ID of Page
-
-### page.unlike
-```fbTools.page.unlike(pageId)```
-
-Parameter | Type | Description
--|-|-
-pageId | Integer | ID of Page
+act | Boolean | true => Like / false => Unlike
 
 <hr>
 
@@ -338,7 +325,7 @@ Integer | Reaction Type
 <hr>
 
 # Check
-Last Check: 04:20 AM Mon Oct 28 2019 (UTC)
+Last Check: 08:30 PM Mon Oct 28 2019 (UTC)
 
 Function | Checked? | Works?
 -|-|-
@@ -360,8 +347,7 @@ group.unfollow | + | +
 group.post.del | - | ?
 group.post.disableCmt | + | +
 group.post.offNotification | + | +
-friendRequest.accept | - | ?
-friendRequest.reject | - | ?
+friendRequest | - | ?
 me.block.page | - | ?
 me.block.user | - | ?
 me.unblockUser | - | ?
@@ -372,5 +358,4 @@ me.post.del | + | +
 me.post.offNotification | + | +
 page.inviteLike | - | ?
 page.like | - | ?
-page.unlike | - | ?
 reaction | + | +
