@@ -28,7 +28,7 @@
     * Block
         * [fbTools.me.block.page](#meblockpage)
         * [fbTools.me.block.user](#meblockuser)
-    * [fbTools.me.unblockUser](#meunblockuser)
+    * [fbTools.me.unblock](#meunblock)
     * [fbTools.me.unfriend](#meunfriend)
     * [fbTools.me.unfollow](#meunfollow)
     * [fbTools.me.poke](#mepoke)
@@ -240,8 +240,8 @@ Parameter | Type | Description
 -|-|-
 userId | Integer | ID of User
 
-### me.unblockUser
-```fbTools.me.unblockUser(userId)```
+### me.unblock
+```fbTools.me.unblock(userId)```
 
 Parameter | Type | Description
 -|-|-
@@ -350,7 +350,7 @@ group.post.offNotification | + | +
 friendRequest | - | ?
 me.block.page | - | ?
 me.block.user | - | ?
-me.unblockUser | - | ?
+me.unblock | - | ?
 me.unfriend | - | ?
 me.unfollow | - | ?
 me.poke | - | ?
