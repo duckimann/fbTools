@@ -1,16 +1,16 @@
 let fbTools = new (function() {
 	// Base
-    this.conv = {
-        query: (obj) => `?${Object.keys(obj).map((key) => `${key}=${obj[key]}`).join("&")}`,
+	this.conv = {
+		query: (obj) => `?${Object.keys(obj).map((key) => `${key}=${obj[key]}`).join("&")}`,
 		form: function(obj) {
 			// Input: {a: "asdf", b: "sd"} Output: FormData
-            let f = new FormData();
-            for (let key of Object.keys(obj)) f.append(key, obj[key]);
+			let f = new FormData();
+			for (let key of Object.keys(obj)) f.append(key, obj[key]);
 			return f;
 		}
-    };
-    this.fet = ({url, bdy}) => fetch(url, {method: "POST", credentials: "include", ...bdy}).then((res) => (console.log(`[fbTools] Response Status Code: ${res.status}`), (String(res.status).match(/^2/g)) ? true : false));
-    this.get = {
+	};
+	this.fet = ({url, bdy}) => fetch(url, {method: "POST", credentials: "include", ...bdy}).then((res) => (console.log(`[fbTools] Response Status Code: ${res.status}`), (String(res.status).match(/^2/g)) ? true : false));
+	this.get = {
 		local: () => ({
 			me: require("CurrentUserInitialData").USER_ID || document.cookie.match(/(?<=c_user=)\d+/g).pop(),
 			dtsg: require("DTSGInitialData").token || document.querySelector('[name="fb_dtsg"]').value,
@@ -24,7 +24,7 @@ let fbTools = new (function() {
 		}))
 	};
 	// Actual Functions
-    this.cmt = {
+	this.cmt = {
 		add: async (obj) => {
 			// Object Supported: {sticker: 123, post: 123, cmt: "your cmt", reply: 123, url: "https://www.youtube.com/"}
 			let f = {
@@ -122,8 +122,8 @@ let fbTools = new (function() {
 				})
 			}
 		}),
-        typing: async (userId, typ) => this.fet({
-        	// typ = 0 or 1
+		typing: async (userId, typ) => this.fet({
+			// typ = 0 or 1
 			url: "https://www.facebook.com/ajax/messaging/typ.php",
 			bdy: {
 				body: this.conv.form({
@@ -136,8 +136,8 @@ let fbTools = new (function() {
 			}
 		})
 	};
-    
-    this.group = {
+	
+	this.group = {
 		addMem: async (groupId, memberId) => this.fet({
 			url: "https://www.facebook.com/ajax/groups/members/add_post/",
 			bdy: {
@@ -239,7 +239,7 @@ let fbTools = new (function() {
 			}
 		}),
 		post: {
-            del: async (groupId, postId) => this.fet({
+			del: async (groupId, postId) => this.fet({
 				url: "https://www.facebook.com/ajax/groups/mall/delete/",
 				bdy: {
 					body: this.conv.form({
@@ -274,9 +274,9 @@ let fbTools = new (function() {
 				}
 			})
 		}
-    };
-    
-    this.friendRequest = async (userId, act) => fbTools.fet({
+	};
+	
+	this.friendRequest = async (userId, act) => fbTools.fet({
 		// act = true => accept request | false => reject
 		url: "https://www.facebook.com/requests/friends/ajax/",
 		bdy: {
@@ -286,9 +286,9 @@ let fbTools = new (function() {
 				id: userId
 			})
 		}
-    });
-    
-    this.me = {
+	});
+	
+	this.me = {
 		block: {
 			page: async (pageId) => this.fet({
 				url: "https://www.facebook.com/privacy/block_page/",
@@ -378,9 +378,9 @@ let fbTools = new (function() {
 				}
 			})
 		}
-    };
-    
-    this.page = {
+	};
+	
+	this.page = {
 		inviteLike: async (pageId, arrInvite, inviteMessage) => {
 			let f = {
 				fb_dtsg: await this.get.local().dtsg,
@@ -405,10 +405,10 @@ let fbTools = new (function() {
 				})
 			}
 		})
-    };
+	};
 	
 	// Reaction {none: 0, like: 1, love: 2, wow: 3, haha: 4, sad: 7, angry: 8}
-    this.reaction = async (postId, reactType) => this.fet({
+	this.reaction = async (postId, reactType) => this.fet({
 		url: "https://www.facebook.com/ufi/reaction/",
 		bdy: {
 			body: this.conv.form({
@@ -420,6 +420,6 @@ let fbTools = new (function() {
 				source: 2
 			})
 		}
-    });
+	});
 });
 console.log(fbTools);
