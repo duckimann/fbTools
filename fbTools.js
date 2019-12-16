@@ -1,23 +1,35 @@
-var fbTools = {
-	conv: {
-		// Input: {a: "asdf", b: "sd"} Output: ?a=asdf&b=sd
-		query: (obj) => `?${Object.keys(obj).map((key) => `${key}=${obj[key]}`).join("&")}`,
+let fbTools = new (function() {
+	// Base
+    this.conv = {
+        query: (obj) => `?${Object.keys(obj).map((key) => `${key}=${obj[key]}`).join("&")}`,
 		form: function(obj) {
 			// Input: {a: "asdf", b: "sd"} Output: FormData
-			let f = new FormData();
-			Object.keys(obj).forEach((key) => {f.append(key, obj[key]);});
+            let f = new FormData();
+            for (let key of Object.keys(obj)) f.append(key, obj[key]);
 			return f;
 		}
-	},
-
-	fet: ({url, bdy}) => fetch(url, {method: "POST", credentials: "include", ...bdy}).then((res) => (console.log(`[fbTools] Response Status Code: ${res.status}`), (String(res.status).match(/^2/g)) ? true : false)),
-
-	cmt: {
+    };
+    this.fet = ({url, bdy}) => fetch(url, {method: "POST", credentials: "include", ...bdy}).then((res) => (console.log(`[fbTools] Response Status Code: ${res.status}`), (String(res.status).match(/^2/g)) ? true : false));
+    this.get = {
+		local: () => ({
+			me: require("CurrentUserInitialData").USER_ID || document.cookie.match(/(?<=c_user=)\d+/g).pop(),
+			dtsg: require("DTSGInitialData").token || document.querySelector('[name="fb_dtsg"]').value,
+			dtsg_ag: require("DTSG_ASYNC").getToken()
+		}),
+		ids: (url) => fetch(url).then((res) => res.text()).then((res) => ({
+			postsId: res.match(/(?<=name="ft_ent_identifier"\svalue=")\d+(?=")/g),
+			userId: res.match(/(?<=entity_id":")\d+(?=")/g),
+			groupId: res.match(/(?<=membership_group_id:)\d+(?=,)/g),
+			pageId: res.match(/(?<=page_id:")\d+(?=")/g)
+		}))
+	};
+	// Actual Functions
+    this.cmt = {
 		add: async (obj) => {
 			// Object Supported: {sticker: 123, post: 123, cmt: "your cmt", reply: 123, url: "https://www.youtube.com/"}
 			let f = {
 				client_id: "1489983090155:3363757627",
-				fb_dtsg: await fbTools.get.local().dtsg,
+				fb_dtsg: await this.get.local().dtsg,
 				session_id: "84d81e4",
 				source: 2
 			};
@@ -31,42 +43,42 @@ var fbTools = {
 					default: console.log(`Key: ${key} - Value: ${obj[key]} is not supported.`); break;
 				};
 			});
-			return fbTools.fet({url: "https://www.facebook.com/ufi/add/comment/", bdy: {body: fbTools.conv.form(f)}});
+			return this.fet({url: "https://www.facebook.com/ufi/add/comment/", bdy: {body: this.conv.form(f)}});
 		},
-		del: async (postId, cmtId) => fbTools.fet({
+		del: async (postId, cmtId) => this.fet({
 			url: "https://www.facebook.com/ufi/delete/comment/",
 			bdy: {
-				body: fbTools.conv.form({
+				body: this.conv.form({
 					client_id: "1489983090155:3363757627",
 					comment_id: `${postId}_${cmtId}`,
 					comment_legacyid: cmtId,
-					fb_dtsg: await fbTools.get.local().dtsg,
+					fb_dtsg: await this.get.local().dtsg,
 					ft_ent_identifier: postId,
 					source: 2
 				})
 			}
 		})
-	},
-
-	conversation: {
-		changeNickname: async (id, nickName, threadId = id) => fbTools.fet({
+	};
+	
+	this.conversation = {
+		changeNickname: async (id, nickName, threadId = id) => this.fet({
 			url: "https://www.facebook.com/messaging/save_thread_nickname/?source=thread_settings",
 			bdy: {
-				body: fbTools.conv.form({
-					fb_dtsg: await fbTools.get.local().dtsg,
+				body: this.conv.form({
+					fb_dtsg: await this.get.local().dtsg,
 					nickname: nickName,
 					participant_id: id,
 					thread_or_other_fbid: threadId
 				})
 			}
 		}),
-		changeEmoji: async (threadId, icon) => fbTools.fet({
+		changeEmoji: async (threadId, icon) => this.fet({
 			url: "https://www.facebook.com/messaging/save_thread_emoji/?source=thread_settings",
 			bdy: {
-				body: fbTools.conv.form({
+				body: this.conv.form({
 					thread_or_other_fbid: threadId,
 					emoji_choice: JSON.parse(`"${icon}"`),
-					fb_dtsg: await fbTools.get.local().dtsg
+					fb_dtsg: await this.get.local().dtsg
 				})
 			}
 		}),
@@ -77,7 +89,7 @@ var fbTools = {
 					action_type: "ma-type:user-generated-message",
 					client: "mercury",
 					ephemeral_ttl_mode: 0,
-					fb_dtsg: await fbTools.get.local().dtsg,
+					fb_dtsg: await this.get.local().dtsg,
 					has_attachment: false,
 					message_id: mId,
 					offline_threading_id: mId,
@@ -99,23 +111,23 @@ var fbTools = {
 					default: console.log(`Key: ${key} - Value: ${obj[key]} is not supported.`); break;
 				};
 			});
-			return fbTools.fet({url: "https://www.facebook.com/messaging/send/", bdy: {body: fbTools.conv.form(f)}});
+			return this.fet({url: "https://www.facebook.com/messaging/send/", bdy: {body: this.conv.form(f)}});
 		},
-		del: async (threadId) => fbTools.fet({
+		del: async (threadId) => this.fet({
 			url: "https://www.facebook.com/ajax/mercury/delete_thread.php",
 			bdy: {
-				body: fbTools.conv.form({
+				body: this.conv.form({
 					"ids[0]": threadId,
-					fb_dtsg: await fbTools.get.local().dtsg
+					fb_dtsg: await this.get.local().dtsg
 				})
 			}
 		}),
-        typing: async (userId, typ) => fbTools.fet({
+        typing: async (userId, typ) => this.fet({
         	// typ = 0 or 1
 			url: "https://www.facebook.com/ajax/messaging/typ.php",
 			bdy: {
-				body: fbTools.conv.form({
-					fb_dtsg: await fbTools.get.local().dtsg,
+				body: this.conv.form({
+					fb_dtsg: await this.get.local().dtsg,
 					source: "mercury-chat",
 					thread: userId,
 					to: userId,
@@ -123,29 +135,15 @@ var fbTools = {
 				})
 			}
 		})
-	},
-
-	get: {
-		local: () => ({
-			me: require("CurrentUserInitialData").USER_ID || document.cookie.match(/(?<=c_user=)\d+/g).pop(),
-			dtsg: require("DTSGInitialData").token || document.querySelector('[name="fb_dtsg"]').value,
-			dtsg_ag: require("DTSG_ASYNC").getToken()
-		}),
-		ids: (url) => fetch(url).then((res) => res.text()).then((res) => ({
-			postsId: res.match(/(?<=name="ft_ent_identifier"\svalue=")\d+(?=")/g),
-			userId: res.match(/(?<=entity_id":")\d+(?=")/g),
-			groupId: res.match(/(?<=membership_group_id:)\d+(?=,)/g),
-			pageId: res.match(/(?<=page_id:")\d+(?=")/g)
-		}))
-	},
-
-	group: {
-		addMem: async (groupId, memberId) => fbTools.fet({
+	};
+    
+    this.group = {
+		addMem: async (groupId, memberId) => this.fet({
 			url: "https://www.facebook.com/ajax/groups/members/add_post/",
 			bdy: {
-				body: fbTools.conv.form({
+				body: this.conv.form({
 					"members[0]": memberId,
-					fb_dtsg: await fbTools.get.local().dtsg,
+					fb_dtsg: await this.get.local().dtsg,
 					group_id: groupId,
 					message_id: "groupsAddMemberCompletionMessage",
 					source: "suggested_members_new"
@@ -157,7 +155,7 @@ var fbTools = {
 			// Group Discoverability: members_only | anyone
 			// memIds: Array of user you want them to be group member
 			let f = {
-				fb_dtsg: await fbTools.get.local().dtsg,
+				fb_dtsg: await this.get.local().dtsg,
 				ref: "discover_groups",
 				"purposes[0]": "",
 				name: groupName,
@@ -165,42 +163,42 @@ var fbTools = {
 				discoverability: discov
 			};
 			if (memIds) memIds.forEach((id, index) => {f[`members[${index}`] = id;});
-			return fbTools.fet({url: "https://www.facebook.com/ajax/groups/create_post/", bdy: {body: fbTools.conv.form(f)}});
+			return this.fet({url: "https://www.facebook.com/ajax/groups/create_post/", bdy: {body: this.conv.form(f)}});
 		},
-		kick: async (groupId, memberId, block = 0) => fbTools.fet({
-			url: `https://www.facebook.com/ajax/groups/remove_member/${fbTools.conv.query({
+		kick: async (groupId, memberId, block = 0) => this.fet({
+			url: `https://www.facebook.com/ajax/groups/remove_member/${this.conv.query({
 				group_id: groupId,
 				is_undo: 0,
 				member_id: memberId,
 				source: "profile_browser"
 			})}`,
 			bdy: {
-				body: fbTools.conv.form({
+				body: this.conv.form({
 					block_user: block,
 					confirmed: true,
-					fb_dtsg: await fbTools.get.local().dtsg
+					fb_dtsg: await this.get.local().dtsg
 				})
 			}
 		}),
-		unban: async (groupId, memberId) => fbTools.fet({
-			url: `https://www.facebook.com/ajax/groups/admin_post/${fbTools.conv.query({
+		unban: async (groupId, memberId) => this.fet({
+			url: `https://www.facebook.com/ajax/groups/admin_post/${this.conv.query({
 				group_id: groupId,
 				operation: "confirm_remove_block",
 				source: "profilebrowser_blocked",
 				user_id: memberId
 			})}`,
 			bdy: {
-				body: fbTools.conv.form({
-					fb_dtsg: await fbTools.get.local().dtsg,
+				body: this.conv.form({
+					fb_dtsg: await this.get.local().dtsg,
 					remove_block: 1
 				})
 			}
 		}),
-		mute: async (groupId, memberId) => fbTools.fet({
+		mute: async (groupId, memberId) => this.fet({
 			url: "https://www.facebook.com/groups/mutemember/",
 			bdy: {
-				body: fbTools.conv.form({
-					fb_dtsg: await fbTools.get.local().dtsg,
+				body: this.conv.form({
+					fb_dtsg: await this.get.local().dtsg,
 					group_id: groupId,
 					mute_duration: "seven_days",
 					should_reload: false,
@@ -209,66 +207,66 @@ var fbTools = {
 				})
 			}
 		}),
-		notification: async (groupId, level) => fbTools.fet({
+		notification: async (groupId, level) => this.fet({
 			// Subscription Level: 6 - Highlight | 3 - All | 2 - Friends | 1 - Off
 			url: `https://www.facebook.com/groups/notification/settings/edit/?group_id=${groupId}&subscription_level=${level}`,
 			bdy: {
-				body: fbTools.conv.form({
-					fb_dtsg: await fbTools.get.local().dtsg
+				body: this.conv.form({
+					fb_dtsg: await this.get.local().dtsg
 				})
 			}
 		}),
-		leave: async (groupId, reAdd) => fbTools.fet({
+		leave: async (groupId, reAdd) => this.fet({
 			// reAdd = Boolean, Which accept anyone invite you to join group again, default: false = they still can add you to group
 			url: `https://www.facebook.com/ajax/groups/membership/leave/?group_id=${groupId}`,
 			bdy: {
-				body: fbTools.conv.form({
+				body: this.conv.form({
 					confirmed: 1,
-					fb_dtsg: await fbTools.get.local().dtsg,
+					fb_dtsg: await this.get.local().dtsg,
 					prevent_readd: (reAdd) ? "on" : ""
 				})
 			}
 		}),
-		unfollow: async (groupId, follow) => fbTools.fet({
+		unfollow: async (groupId, follow) => this.fet({
 			// follow = 1 -> Unfollow | 0 -> Follow
 			url: "https://www.facebook.com/groups/membership/unfollow_group/",
 			bdy: {
-				body: fbTools.conv.form({
+				body: this.conv.form({
 					group_id: groupId,
 					unfollow: follow,
-					fb_dtsg: await fbTools.get.local().dtsg
+					fb_dtsg: await this.get.local().dtsg
 				})
 			}
 		}),
 		post: {
-			del: async (groupId, postId) => fbTools.fet({
+            del: async (groupId, postId) => this.fet({
 				url: "https://www.facebook.com/ajax/groups/mall/delete/",
 				bdy: {
-					body: fbTools.conv.form({
+					body: this.conv.form({
 						confirmed: 1,
-						fb_dtsg: await fbTools.get.local().dtsg,
+						fb_dtsg: await this.get.local().dtsg,
 						group_id: groupId,
 						post_id: postId
 					})
 				}
 			}),
-			disableCmt: async (postId, cmt) => fbTools.fet({
+			disableCmt: async (postId, cmt) => this.fet({
 				// cmt = 1 -> disable | 0 -> enable
 				url: "https://www.facebook.com/feed/ufi/disable_comments/",
 				bdy: {
-					body: fbTools.conv.form({
-						fb_dtsg: await fbTools.get.local().dtsg,
+					body: this.conv.form({
+						fb_dtsg: await this.get.local().dtsg,
 						ft_ent_identifier: postId,
 						disable_comments: cmt
 					})
 				}
 			}),
-			offNotification: async (groupId, postId, follow) => fbTools.fet({
+			offNotification: async (groupId, postId, follow) => this.fet({
 				// follow = 0 -> Turn Off notification | 1 -> turn on notification
 				url: "https://www.facebook.com/ajax/litestand/follow_group_post",
 				bdy: {
-					body: fbTools.conv.form({
-						fb_dtsg: await fbTools.get.local().dtsg,
+					body: this.conv.form({
+						fb_dtsg: await this.get.local().dtsg,
 						group_id: groupId,
 						message_id: postId,
 						follow: follow
@@ -276,9 +274,9 @@ var fbTools = {
 				}
 			})
 		}
-	},
-
-	friendRequest: async (userId, act) => fbTools.fet({
+    };
+    
+    this.friendRequest = async (userId, act) => fbTools.fet({
 		// act = true => accept request | false => reject
 		url: "https://www.facebook.com/requests/friends/ajax/",
 		bdy: {
@@ -288,139 +286,140 @@ var fbTools = {
 				id: userId
 			})
 		}
-	}),
-
-	me: {
+    });
+    
+    this.me = {
 		block: {
-			page: async (pageId) => fbTools.fet({
+			page: async (pageId) => this.fet({
 				url: "https://www.facebook.com/privacy/block_page/",
 				bdy: {
-					body: fbTools.conv.form({
+					body: this.conv.form({
 						confirmed: 1,
-						fb_dtsg: await fbTools.get.local().dtsg,
+						fb_dtsg: await this.get.local().dtsg,
 						page_id: pageId
 					})
 				}
 			}),
-			user: async (id) => fbTools.fet({
+			user: async (id) => this.fet({
 				url: "https://www.facebook.com/ajax/privacy/block_user.php",
 				bdy: {
-					body: fbTools.conv.form({
+					body: this.conv.form({
 						confirmed: 1,
-						fb_dtsg: await fbTools.get.local().dtsg,
+						fb_dtsg: await this.get.local().dtsg,
 						uid: id
 					})
 				}
 			})
 		},
-		unblock: async (userId) => fbTools.fet({
+		unblock: async (userId) => this.fet({
 			url: "https://www.facebook.com/privacy/unblock_user/",
 			bdy: {
-				body: fbTools.conv.form({
-					fb_dtsg: await fbTools.get.local().dtsg,
+				body: this.conv.form({
+					fb_dtsg: await this.get.local().dtsg,
 					privacy_source: "privacy_settings_page",
 					uid: userId
 				})
 			}
 		}),
-		unfriend: async (userId) => fbTools.fet({
+		unfriend: async (userId) => this.fet({
 			url: "https://www.facebook.com/ajax/profile/removefriendconfirm.php",
 			bdy: {
-				body: fbTools.conv.form({
+				body: this.conv.form({
 					confirmed: 1,
-					fb_dtsg: await fbTools.get.local().dtsg,
+					fb_dtsg: await this.get.local().dtsg,
 					uid: userId
 				})
 			}
 		}),
-		unfollow: async (id) => fbTools.fet({
+		unfollow: async (id) => this.fet({
 			url: "https://www.facebook.com/ajax/follow/unfollow_profile.php",
 			bdy: {
-				body: fbTools.conv.form({
+				body: this.conv.form({
 					"nctr[_mod]": "pagelet_collections_following",
-					fb_dtsg: await fbTools.get.local().dtsg,
+					fb_dtsg: await this.get.local().dtsg,
 					location: 4,
 					profile_id: id
 				})
 			}
 		}),
-		poke: async (userId) => fbTools.fet({
-			url: `https://www.facebook.com/pokes/dialog/${fbTools.conv.query({
+		poke: async (userId) => this.fet({
+			url: `https://www.facebook.com/pokes/dialog/${this.conv.query({
 				poke_target: userId
 			})}`,
 			bdy: {
-				body: fbTools.conv.form({
-					fb_dtsg: await fbTools.get.local().dtsg
+				body: this.conv.form({
+					fb_dtsg: await this.get.local().dtsg
 				})
 			}
 		}),
 		post: {
-			del: async (postId) => fbTools.fet({
-				url: `https://www.facebook.com/ajax/timeline/delete${fbTools.conv.query({
-					identifier: `S:_I${fbTools.get.local().me}:${postId}`,
+			del: async (postId) => this.fet({
+				url: `https://www.facebook.com/ajax/timeline/delete${this.conv.query({
+					identifier: `S:_I${this.get.local().me}:${postId}`,
 					is_notification_preview: 0,
 					location: 9,
 					render_location: 10
 				})}`,
 				bdy: {
-					body: fbTools.conv.form({
-						fb_dtsg: fbTools.get.local().dtsg
+					body: this.conv.form({
+						fb_dtsg: this.get.local().dtsg
 					})
 				}
 			}),
-			offNotification: async (groupId, postId, follow) => fbTools.fet({
+			offNotification: async (postId, follow) => this.fet({
 			// follow = 0 -> Turn Off notification | 1 -> turn on notification
 				url: "https://www.facebook.com/ajax/litestand/follow_post",
 				bdy: {
-					body: fbTools.conv.form({
-						fb_dtsg: await fbTools.get.local().dtsg,
+					body: this.conv.form({
+						fb_dtsg: await this.get.local().dtsg,
 						message_id: postId,
 						follow: follow
 					})
 				}
 			})
 		}
-	},
-
-	page: {
+    };
+    
+    this.page = {
 		inviteLike: async (pageId, arrInvite, inviteMessage) => {
 			let f = {
-				fb_dtsg: await fbTools.get.local().dtsg,
+				fb_dtsg: await this.get.local().dtsg,
 				invite_note: inviteMessage,
 				page_id: pageId,
 				ref: "modal_page_invite_dialog_v2",
 				send_in_messenger: false
 			};
 			arrInvite.forEach((id, index, arr) => {f[`invitees[${index}]`] = id;});
-			return fbTools.fet({url: "https://www.facebook.com/pages/batch_invite_send/", bdy: {body: fbTools.conv.form(f)}});
+			return this.fet({url: "https://www.facebook.com/pages/batch_invite_send/", bdy: {body: this.conv.form(f)}});
 		},
-		like: async (pageId, orNot) => fbTools.fet({
+		like: async (pageId, orNot) => this.fet({
 			// orNot = true => like page | false => Unlike
-			url: `https://www.facebook.com/ajax/pages/fan_status.php?av=${fbTools.get.myId()}`,
+			url: `https://www.facebook.com/ajax/pages/fan_status.php?av=${this.get.myId()}`,
 			bdy: {
-				body: fbTools.conv.form({
-					actor_id: fbTools.get.myId(),
+				body: this.conv.form({
+					actor_id: this.get.myId(),
 					add: orNot,
-					fb_dtsg: fbTools.get.local().dtsg,
+					fb_dtsg: this.get.local().dtsg,
 					fbpage_id: pageId,
 					reload: false
 				})
 			}
 		})
-	},
-
+    };
+	
 	// Reaction {none: 0, like: 1, love: 2, wow: 3, haha: 4, sad: 7, angry: 8}
-	reaction: async (postId, reactType) => fbTools.fet({
+    this.reaction = async (postId, reactType) => this.fet({
 		url: "https://www.facebook.com/ufi/reaction/",
 		bdy: {
-			body: fbTools.conv.form({
+			body: this.conv.form({
 				client_id: "1489983090155:3363757627",
-				fb_dtsg: await fbTools.get.local().dtsg,
+				fb_dtsg: await this.get.local().dtsg,
 				ft_ent_identifier: postId,
 				reaction_type: reactType,
 				session_id: "84d81e4",
 				source: 2
 			})
 		}
-	}),
-}
+    });
+});
+console.log(fbTools);

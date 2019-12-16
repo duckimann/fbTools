@@ -325,7 +325,7 @@ Integer | Reaction Type
 <hr>
 
 # Check
-Last Check: 08:30 PM Mon Oct 28 2019 (UTC)
+Last Check: 01:50 PM Mon Dec 16 2019 (GMT+7)
 
 Function | Checked? | Works?
 -|-|-
