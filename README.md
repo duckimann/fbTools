@@ -41,7 +41,7 @@
 * [fbTools.reaction](#reaction)
 
 * Most function return a Promise with value true.
-
+* [Which function is working?](#Check)
 ### cmt.add
 ```fbTools.cmt.add(obj)```
 
@@ -325,7 +325,7 @@ Integer | Reaction Type
 <hr>
 
 # Check
-Last Check: 01:50 PM Mon Dec 16 2019 (GMT+7)
+Last Check: 08:53 PM Tue Dec 24 2019 (GMT+7)
 
 Function | Checked? | Works?
 -|-|-
@@ -344,7 +344,7 @@ group.mute | - | ?
 group.leave | + | +
 group.notification | + | +
 group.unfollow | + | +
-group.post.del | - | ?
+group.post.del | + | +
 group.post.disableCmt | + | +
 group.post.offNotification | + | +
 friendRequest | - | ?
