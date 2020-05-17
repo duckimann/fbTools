@@ -9,6 +9,7 @@ let fbTools = new (function() {
 			return f;
 		}
 	};
+	// this.fet = ({url, bdy}) => fetch(url, {method: "POST", credentials: "include", ...bdy}).then((res) => (String(res.status).match(/^2/g)) ? true : false); // No logging Fetch
     this.fet = function(obj) {
 		let {url, bdy} = obj,
 			caller = (arguments.callee.caller.name) ? `.${arguments.callee.caller.name}` : "";
@@ -18,7 +19,8 @@ let fbTools = new (function() {
 		local: () => ({
 			me: require("CurrentUserInitialData").USER_ID || document.cookie.match(/(?<=c_user=)\d+/g).pop(),
 			dtsg: require("DTSGInitialData").token || document.querySelector('[name="fb_dtsg"]').value,
-			dtsg_ag: require("DTSG_ASYNC").getToken()
+			dtsg_ag: require("DTSG_ASYNC").getToken(),
+			// tlController: require("TimelineController")
 		}),
 		ids: (url) => fetch(url).then((res) => res.text()).then((res) => ({
 			postsId: res.match(/(?<=name="ft_ent_identifier"\svalue=")\d+(?=")/g),
@@ -35,17 +37,16 @@ let fbTools = new (function() {
 				client_id: "1489983090155:3363757627",
 				fb_dtsg: await this.get.local().dtsg,
 				session_id: "84d81e4",
-				source: 2
-			};
-			for (let key in obj) {
-				if (obj[key]) switch (key) {
-					case "sticker": f.attached_sticker_fbid = obj[key]; break;
-					case "post": f.ft_ent_identifier = obj[key]; break;
-					case "cmt": f.comment_text = obj[key]; break;
-					case "reply": f.reply_fbid = obj[key]; f.parent_comment_id = `${obj["post"]}_${obj[key]}`; break;
-					case "url": f.attached_share_url = obj[key]; break;
-					default: console.log(`Key: ${key} - Value: ${obj[key]} is not supported.`); break;
-				};
+				source: 2,
+
+				...(obj.sticker) ? ({attached_sticker_fbid: obj.sticker}) : "",
+				...(obj.post) ? ({ft_ent_identifier: obj.post}) : "",
+				...(obj.cmt) ? ({comment_text: obj.cmt}) : "",
+				...(obj.reply) ? ({
+					reply_fbid: obj.reply,
+					parent_comment_id: `${obj.post}_${obj.reply}`
+				}) : "",
+				...(obj.url) ? ({attached_share_url: obj.url}) : "",
 			};
 			return this.fet.call("cmt", {url: "https://www.facebook.com/ufi/add/comment/", bdy: {body: this.conv.form(f)}});
 		},
@@ -86,7 +87,19 @@ let fbTools = new (function() {
 			}
 		}),
 		chat: async (obj) => {
-			// Object Supported: {audio: 123, emoji: "😂", emoji: "\uD83D\uDE02", emoji_size: "Pick one: small medium large", img: 123, message: "your cmt", sticker: 123, thread: 123, user: 123, video: 123, kick: 123 }
+			/* Object Supported: {
+					audio: 123,
+					emoji: "😂" || "\uD83D\uDE02",
+					emoji_size: "small" || "medium" || "large",
+					img: 123, // or img: [1,2,3]
+					message: "your msg",
+					sticker: 123,
+					thread: 123,
+					user: 123,
+					video: 123,
+					kick: 123
+				}
+			*/
 			let mId = Math.floor(Math.random() * 999999999),
 				f = {
 					action_type: "ma-type:user-generated-message",
@@ -97,23 +110,33 @@ let fbTools = new (function() {
 					message_id: mId,
 					offline_threading_id: mId,
 					source: "source:titan:web",
-					timestamp: Date.now()
+					timestamp: Date.now(),
+
+					...(obj.audio) ? ({"audio_ids[0]": obj.audio}) : "",
+					...(obj.emoji) ? ({body: JSON.parse(`"${obj.emoji}"`)}) : "",
+					...(obj.emoji_size) ? ({"tags[0]": `hot_emoji_size:${obj.emoji_size}`}) : "",
+					// ...(obj.file) ? ({
+					// 	has_attachment: true,
+					// 	"file_ids[0]": obj.file
+					// }) : "",
+					...(obj.img) ? ({
+						has_attachment: true,
+						...( Array.isArray(obj.img) ? obj.img : [obj.img]).reduce((current, item, index) => ({...current, [`image_ids[${index}]`]: item}), {})
+					}) : "",
+					...(obj.kick) ? ({
+						action_type: "ma-type:log-message",
+						log_message_type: "log:unsubscribe",
+						"log_message_data[removed_participants][0]": `fbid:${obj.kick}`
+					}) : "",
+					...(obj.message) ? ({body: obj.message}) : "",
+					...(obj.sticker) ? ({
+						has_attachment: true,
+						sticker_id: obj.sticker
+					}) : "",
+					...(obj.thread) ? ({thread_fbid: obj.thread}) : "",
+					...(obj.user) ? ({other_user_fbid: obj.user}) : "",
+					...(obj.video) ? ({"video_ids[0]": obj.video}) : "",
 				};
-			for (let key in obj) {
-				if (obj[key]) switch(key) {
-					case "thread": f.thread_fbid = obj[key]; break;
-					case "message": f.body = obj[key]; break;
-					case "sticker": f.has_attachment = true; f.sticker_id = obj[key]; break;
-					case "user": f.other_user_fbid = obj[key]; break;
-					case "kick": f.action_type = "ma-type:log-message"; f.log_message_type = "log:unsubscribe"; f["log_message_data[removed_participants][0]"] = `fbid:${obj[key]}`; break;
-					case "img": f.has_attachment = true; (typeof(obj[key]) == "string" || typeof(obj[key]) == "number") ? f["image_ids[0]"] = obj[key] : (typeof(obj[key]) == "object") ? obj[key].forEach((id, item) => f[`image_ids[${item}]`] = id) : ""; break;
-					case "audio": f["audio_ids[0]"] = obj[key]; break;
-					case "video": f["video_ids[0]"] = obj[key]; break;
-					case "emoji": f.body = JSON.parse(`"${obj[key]}"`); break;
-					case "emoji_size": f["tags[0]"] = `hot_emoji_size:${obj[key]}`; break;
-					default: console.log(`Key: ${key} - Value: ${obj[key]} is not supported.`); break;
-				};
-			};
 			return this.fet.call("conversation", {url: "https://www.facebook.com/messaging/send/", bdy: {body: this.conv.form(f)}});
 		},
 		del: async (threadId) => this.fet.call("conversation", {
@@ -126,7 +149,7 @@ let fbTools = new (function() {
 			}
 		}),
         typing: async (userId, typ) => this.fet.call("conversation", {
-        	// typ = 0 or 1
+        	// typ = 0 || 1
 			url: "https://www.facebook.com/ajax/messaging/typ.php",
 			bdy: {
 				body: this.conv.form({
@@ -181,16 +204,14 @@ let fbTools = new (function() {
 			})
 		},
 		create: async (groupName, privacy = "open", discov = "anyone", memIds = "") => {
-			// Group Privacy Supported: secret | open (Case Sensitive)
-			// Group Discoverability: members_only | anyone
 			// memIds: Array of user you want them to be group member
 			let f = {
 				fb_dtsg: await this.get.local().dtsg,
 				ref: "discover_groups",
 				"purposes[0]": "",
 				name: groupName,
-				privacy: privacy,
-				discoverability: discov
+				privacy: privacy, // "secret" || "open"
+				discoverability: discov // "members_only" || "anyone"
 			};
 			if (memIds) memIds.forEach((id, index) => {f[`members[${index}`] = id;});
 			return this.fet.call("group", {url: "https://www.facebook.com/ajax/groups/create_post/", bdy: {body: this.conv.form(f)}});
@@ -523,7 +544,7 @@ let fbTools = new (function() {
 		})
     };
 
-	// Reaction {none: 0, like: 1, love: 2, wow: 3, haha: 4, sad: 7, angry: 8}
+	// Reaction {none: 0, like: 1, love: 2, wow: 3, haha: 4, sad: 7, angry: 8, care: 16}
     this.reaction = async (postId, reactType) => this.fet.call("reaction", {
 		url: "https://www.facebook.com/ufi/reaction/",
 		bdy: {
