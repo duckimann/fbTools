@@ -92,7 +92,6 @@ let fbTools = new (function() {
 					thread: 123,
 					user: 123,
 					video: 123,
-					kick: 123
 				}
 			*/
 			let mId = Math.floor(Math.random() * 999999999),
@@ -117,11 +116,6 @@ let fbTools = new (function() {
 						has_attachment: true,
 						...(Array.isArray(obj.img) ? obj.img : [obj.img]).reduce((current, item, index) => ({...current, [`image_ids[${index}]`]: item}), {})
 					}) : "",
-					...(obj.kick) ? ({
-						action_type: "ma-type:log-message",
-						log_message_type: "log:unsubscribe",
-						"log_message_data[removed_participants][0]": `fbid:${obj.kick}`
-					}) : "",
 					...(obj.message) ? ({body: obj.message}) : "",
 					...(obj.sticker) ? ({
 						has_attachment: true,
@@ -133,6 +127,12 @@ let fbTools = new (function() {
 				};
 			return this.fet({url: "https://www.facebook.com/messaging/send/", bdy: {body: this.conv.form(f)}});
 		},
+		kick: (threadId, userId) => this.fet({
+			url: `https://www.facebook.com/chat/remove_participants/?uid=${userId}&tid=${threadId}`,
+			bdy: {
+				body: this.conv.form({})
+			}
+		}),
 		del: (threadId) => this.fet({
 			url: "https://www.facebook.com/ajax/mercury/delete_thread.php",
 			bdy: {
@@ -517,5 +517,21 @@ let fbTools = new (function() {
 			})
 		}
     });
+    this.upload = async (blob) => {
+		let f = await {
+				"attachment[]": blob,
+				fb_dtsg: this.get.local().dtsg
+			};
+
+		if (blob.type.includes("image")) f.image_only = true;
+		if (blob.type.includes("audio")) f.voice_clip = true;
+		if (blob.type.includes("text")) f.file_only = true; // I'm just predicting this is it. Idk is it true btw =.=
+
+		return fetch(`https://upload.facebook.com/ajax/mercury/upload.php?fb_dtsg=${f.fb_dtsg}&__a=1`, {
+			method: "POST",
+			credentials: "include",
+			body: this.conv.form(f)
+		}).then((e) => e.text());
+	};
 });
 console.log(fbTools);
