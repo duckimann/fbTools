@@ -1,16 +1,14 @@
 let fbTools = new (function() {
 	// Base
     this.conv = {
-        query: (obj) => `?${Object.keys(obj).map((key) => `${key}=${obj[key]}`).join("&")}`, // Input: {a: "asdf", b: "sd"} Output: "?a=asdf&b=sd"
+        query: (obj) => `?${Object.keys(obj).map((key) => `${key}=${obj[key]}`).join("&")}`,
 		form: function(obj) {
-			// Input: {a: "asdf", b: "sd"} Output: FormData
             let f = new FormData();
-            for (let key of Object.keys(obj)) f.append(key, obj[key]);
+            for (let key in obj) f.append(key, obj[key]);
 			return f;
 		}
 	};
-	// this.fet = ({url, bdy}) => fetch(url, {method: "POST", credentials: "include", ...bdy}).then((res) => (String(res.status).match(/^2/g)) ? true : false); // No logging Fetch
-    this.fet = async function({url, bdy}) {
+    this.fet = async function({url, bdy = { body: new FormData() }}) {
 		bdy.body.append("fb_dtsg", await this.get.local().dtsg);
 		return fetch(url, {method: "POST", credentials: "include", ...bdy}).then((res) => (String(res.status).match(/^2/g)) ? true : false);
 	};
@@ -125,14 +123,9 @@ let fbTools = new (function() {
 					...(obj.user) ? ({other_user_fbid: obj.user}) : "",
 					...(obj.video) ? ({"video_ids[0]": obj.video}) : "",
 				};
-			return this.fet({url: "https://www.facebook.com/messaging/send/", bdy: {body: this.conv.form(f)}});
+			return this.fet({url: "https://www.facebook.com/messaging/send/", bdy: { body: this.conv.form(f) }});
 		},
-		kick: (threadId, userId) => this.fet({
-			url: `https://www.facebook.com/chat/remove_participants/?uid=${userId}&tid=${threadId}`,
-			bdy: {
-				body: this.conv.form({})
-			}
-		}),
+		kick: (threadId, userId) => this.fet({ url: `https://www.facebook.com/chat/remove_participants/?uid=${userId}&tid=${threadId}`, }),
 		del: (threadId) => this.fet({
 			url: "https://www.facebook.com/ajax/mercury/delete_thread.php",
 			bdy: {
@@ -168,7 +161,7 @@ let fbTools = new (function() {
 		}),
 		approveJoin: async (groupId, memberId) => {
 			let local = await this.get.local();
-			return this.fet.call("group", {
+			return this.fet({
 				url: "https://www.facebook.com/api/graphql/",
 				bdy: {
 					body: this.conv.form({
@@ -203,7 +196,7 @@ let fbTools = new (function() {
 				discoverability: discov, // "members_only" || "anyone"
 				...(Array.isArray(memIds) ? memIds : [memIds]).reduce((current, item, index) => ({...current, [`members[${index}`]: item}), {})
 			};
-			return this.fet({url: "https://www.facebook.com/ajax/groups/create_post/", bdy: {body: this.conv.form(f)}});
+			return this.fet({url: "https://www.facebook.com/ajax/groups/create_post/", bdy: { body: this.conv.form(f) }});
 		},
 		// role = "invite_admin" || "remove_admin" || "invite_moderator" || "remove_moderator"
 		inviteRole: (groupId, memberId, role) => this.fet({
@@ -258,9 +251,6 @@ let fbTools = new (function() {
 		notification: (groupId, level) => this.fet({
 			// Subscription Level: 6 - Highlight | 3 - All | 2 - Friends | 1 - Off
 			url: `https://www.facebook.com/groups/notification/settings/edit/?group_id=${groupId}&subscription_level=${level}`,
-			bdy: {
-				body: this.conv.form({})
-			}
 		}),
 		post: {
 			approve: (groupId, postId) => this.fet({
@@ -419,14 +409,7 @@ let fbTools = new (function() {
 				}
 			})
 		},
-		poke: (userId) => this.fet({
-			url: `https://www.facebook.com/pokes/dialog/${this.conv.query({
-				poke_target: userId
-			})}`,
-			bdy: {
-				body: this.conv.form({})
-			}
-		}),
+		poke: (userId) => this.fet({ url: `https://www.facebook.com/pokes/dialog/${this.conv.query({ poke_target: userId })}`, }),
 		post: {
 			del: (postId) => this.fet({
 				url: `https://www.facebook.com/ajax/timeline/delete${this.conv.query({
@@ -435,9 +418,6 @@ let fbTools = new (function() {
 					location: 9,
 					render_location: 10
 				})}`,
-				bdy: {
-					body: this.conv.form({})
-				}
 			}),
 			offNotification: (postId, follow) => this.fet({
 			// follow = 0 -> Turn Off notification | 1 -> turn on notification
