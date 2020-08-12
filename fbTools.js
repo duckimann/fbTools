@@ -17,7 +17,7 @@ let fbTools = new (function() {
 			me: require("CurrentUserInitialData").USER_ID || document.cookie.match(/(?<=c_user=)\d+/g).pop(),
 			dtsg: require("DTSGInitialData").token || document.querySelector('[name="fb_dtsg"]').value,
 			dtsg_ag: require("DTSG_ASYNC").getToken(),
-			// tlController: require("TimelineController")
+			tlController: require("TimelineController"),
 		}),
 		ids: (url) => fetch(url).then((res) => res.text()).then((res) => ({
 			postsId: res.match(/(?<=name="ft_ent_identifier"\svalue=")\d+(?=")/g),
